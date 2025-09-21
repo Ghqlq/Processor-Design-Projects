@@ -21,7 +21,7 @@ module Program_Counter (
                         pc + 16'd1;
 
     // PC register update
-    always @(posedge clk or posedge reset) begin
+    always @(posedge clk) begin
         if (reset)
             pc <= 16'd0;
         else
