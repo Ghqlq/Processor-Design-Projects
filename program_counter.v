@@ -1,30 +1,23 @@
 // Program Counter Module for RisC-16 Processor
-module Program_Counter (
-    input  clk,reset,
-    input  [2:0]  op,          
-    input  [15:0] alu_out,   
-    input  [15:0] regB,        
-    input  [7:0] imm,         
-    output reg  [15:0] pc
+module pc(
+    input  clk,rst_n,
+    input  [1:0]  MUX_output,       
+    input  [15:0] alu_out,
+    input  [6:0] imm,   
+    output [15:0] nxt_instr 
 );
-    // opcode: 111 - jalr, 110 - beq, others - normal
-    wire jalr = (op == 3'b111);
-    wire beq  = (op == 3'b110) && (alu_out == regB);
+    reg [15:0] pc; 
+    wire [15:0] imm_se = {{9{imm[6]}}, imm};
+    wire [15:0] increment = (MUX_output == 2'b01) ? pc + 16'd1 + imm_se :
+                       (MUX_output == 2'b10) ? alu_out :
+                       pc + 16'd1; 
 
-    // RisC-16 beq/jalr address calculation
-    wire [15:0] beq_do  = pc + 16'd1 + imm; 
-    wire [15:0] jalr_do = alu_out;        
-
-    // Next PC logic
-    wire [15:0] next = jalr ? jalr_do :
-                        beq  ? beq_do  :
-                        pc + 16'd1;
-
-    // PC register update
     always @(posedge clk) begin
-        if (reset)
-            pc <= 16'd0;
+        if (rst_n)
+            pc <= increment;
         else
-            pc <= next;
+            pc <= 16'd0;
     end
+
+    assign nxt_instr = pc;
 endmodule
