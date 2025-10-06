@@ -37,7 +37,7 @@ always @(*) begin
         add, Nand:
         begin
             reg_out1 = register_file[rB];
-            reg_out2 = register_file[rC];
+            reg_out2 = (MUX_rf == 1'b0) ? register_file[rC] : register_file[rA];
         end
         addi:
         begin
@@ -52,7 +52,7 @@ always @(*) begin
         sw:
         begin
             reg_out1 = register_file[rB];
-            reg_out2 = register_file[rA];
+            reg_out2 = (MUX_rf == 1'b0) ? register_file[rC] : register_file[rA];
         end
         lw:
         begin
@@ -62,7 +62,7 @@ always @(*) begin
         beq:
         begin
             reg_out1 = register_file[rB];
-            reg_out2 = register_file[rA];
+            reg_out2 = (MUX_rf == 1'b0) ? register_file[rC] : register_file[rA];
         end
         jalr:
         begin
