@@ -1,13 +1,13 @@
-module register (
-    input [1:0] MUX_tgt,        // already chosen??
-    input MUX_rf,               // choose rA or rC
-    input WE_rf,                // ????
-    input mem_out, alu_out, pc,
-    input [15:0] instruction,
-    output [2:0] reg_out1, reg_out2
+module register_file (
+    input clk,
+    input [1:0] MUX_tgt,
+    input MUX_rf,
+    input WE_rf,
+    input [15:0] mem_out, alu_out, pc, instruction,
+    output reg [15:0] reg_out1, reg_out2
 );
 
-reg [15:0] reg_arr [7:0];
+reg [15:0] register_file [7:0];
 
 parameter
     add = 3'b000,   addi = 3'b001,
@@ -15,7 +15,7 @@ parameter
     sw = 3'b101,    lw = 3'b100,
     beq = 3'b110,   jalr = 3'b111;
 
-wire [3:0] opCode, rA, rB, rC;
+wire [2:0] opCode, rA, rB, rC;
 wire [6:0] signed_imm;
 wire [9:0] imm;
 
@@ -26,35 +26,62 @@ assign rC = instruction[2:0];
 assign signed_imm = instruction[6:0];
 assign imm = instruction[9:0];
 
-// ALU: add, addi, nand,            lui????
-// Data Memoryl: sw, lw, beq, jalr
+integer i;
+initial begin
+    for (i = 0; i < 8; i = i + 1)
+        register_file[i] = 16'h0;
+end
 
-always @(*)
-    begin
-        if WE_rf == 1'b1:
-            assign reg_arr[rA] = (MUX_tgt == 2'b00) ? mem_out :
-                                 (MUX_tgt == 2'b01) ? alu_out : pc + 1;
-        case(opCode)
+always @(*) begin
+    case(opCode)
         add, Nand:
-            assign reg_out1 <= reg_arr[rB];
-            assign reg_out2 <= reg_arr[rC];
+        begin
+            reg_out1 = register_file[rB];
+            reg_out2 = register_file[rC];
+        end
         addi:
-            assign reg_out1 <= reg_arr[rB];
-            assign reg_out2 <= signed_imm;
+        begin
+            reg_out1 = register_file[rB];
+            reg_out2 = {{9{signed_imm[6]}}, signed_imm};
+        end
         lui:
-            assign reg_out1 <= imm;
+        begin
+            reg_out1 = imm << 6;
+            reg_out2 = 16'b0;
+        end
         sw:
-            assign reg_out1 <= reg_arr[rA];
-            assign reg_out2 <= reg_arr[rB];
+        begin
+            reg_out1 = register_file[rB];
+            reg_out2 = register_file[rA];
+        end
         lw:
-            assign reg_out1 <= reg_arr[rB];
-            assign reg_out2 <= signed_imm;
+        begin
+            reg_out1 = register_file[rB];
+            reg_out2 = {{9{signed_imm[6]}}, signed_imm};
+        end
         beq:
-            assign reg_out1 <= reg_arr[rA];
-            assign reg_out2 <= reg_arr[rB];
+        begin
+            reg_out1 = register_file[rB];
+            reg_out2 = register_file[rA];
+        end
         jalr:
-            assign reg_out1 <= pc + 1;
-        endcase
+        begin
+            reg_out1 = register_file[rB];
+            reg_out2 = pc + 1;
+        end
+        default: 
+        begin
+            reg_out1 = 16'h0;
+            reg_out2 = 16'h0;
+        end
+    endcase
+end
+
+always @(posedge clk) begin
+    if (WE_rf == 1'b1 && rA != 3'b000) begin
+        register_file[rA] = (MUX_tgt == 2'b00) ? mem_out :
+                            (MUX_tgt == 2'b01) ? alu_out : pc + 1;
     end
+end
 
 endmodule
