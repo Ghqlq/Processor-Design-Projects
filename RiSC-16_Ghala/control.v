@@ -1,15 +1,15 @@
 module control(
     input [2:0] opcode,
     input EQ,
-    output [1:0] FUNC_alu,MUX_pc, MUX_tgt;
-    output MUX_alu1, MUX_alu2, MUX_rf, WE_rf, WE_dmem;
+    output [1:0] FUNC_alu,MUX_pc, MUX_tgt,
+    output MUX_alu1, MUX_alu2, MUX_rf, WE_rf, WE_dmem
 );
     wire add = (opcode == 3'b000);
     wire addi = (opcode == 3'b001);
     wire isnand = (opcode == 3'b010);
     wire lui  = (opcode == 3'b011);
-    wire sw  = (opcode == 3'101);
-    wire lw  = (opcode == 3'100);
+    wire sw  = (opcode == 3'b101);
+    wire lw  = (opcode == 3'b100);
     wire beq = (opcode == 3'b110);
     wire jalr = (opcode == 3'b111);
 

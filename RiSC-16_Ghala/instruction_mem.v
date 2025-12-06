@@ -5,9 +5,8 @@ module instruction_mem(
     reg [15:0] mem [0:65535];
 
     initial begin
-        mem[16'h0000] = 16'h;
-        mem[16'h0001] = 16'h;
-        //....
+        $readmemb("program.mem", mem, 0, 8);
     end
-    assign instr_out = mem[pc];  
+
+    assign instr_out = mem[pc];
 endmodule
